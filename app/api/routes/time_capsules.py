@@ -1,10 +1,10 @@
 """Time Capsule routes"""
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
+from pymongo.database import Database
 from app.database import get_db
 
-from app.models import User, TimeCapsule
+from app.models import User
 from app.schemas import (
     TimeCapsuleCreate,
     TimeCapsuleResponse,
@@ -21,9 +21,11 @@ from app.crud.time_capsule import (
     delete_time_capsule,
     get_opened_time_capsules,
     get_pending_time_capsules_for_user,
-    get_pending_time_capsules
+    get_pending_time_capsules,
+    attach_capsule_user,
 )
 from app.security import decrypt_message
+from app.mongo_helpers import utc_naive
 from datetime import datetime
 
 router = APIRouter(prefix="/time-capsules", tags=["time-capsules"])
@@ -33,11 +35,10 @@ router = APIRouter(prefix="/time-capsules", tags=["time-capsules"])
 def create_time_capsule_endpoint(
     capsule_data: TimeCapsuleCreate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Database = Depends(get_db)
 ):
     """Create a new time capsule"""
-    # Validate open_date is in the future
-    if capsule_data.open_date <= datetime.utcnow():
+    if utc_naive(capsule_data.open_date) <= datetime.utcnow():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Open date must be in the future"
@@ -52,7 +53,7 @@ def get_my_time_capsules(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Database = Depends(get_db)
 ):
     """Get current user's time capsules"""
     capsules = get_user_time_capsules(db, current_user.id, skip, limit)
@@ -64,7 +65,7 @@ def get_my_pending_capsules(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Database = Depends(get_db)
 ):
     """Get current user's pending (not opened) time capsules"""
     capsules = get_pending_time_capsules_for_user(db, current_user.id, skip, limit)
@@ -76,13 +77,12 @@ def get_my_opened_capsules(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Database = Depends(get_db)
 ):
     """Get current user's opened time capsules with decrypted content"""
     capsules = get_opened_time_capsules(db, current_user.id, skip, limit)
     result = []
     for capsule in capsules:
-        # Decrypt content for opened capsules
         try:
             decrypted_content = decrypt_message(capsule.content)
         except ValueError as exc:
@@ -98,9 +98,9 @@ def get_my_opened_capsules(
 
 @router.get("/{capsule_id}", response_model=TimeCapsuleDetailResponse)
 def get_time_capsule(
-    capsule_id: int,
+    capsule_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Database = Depends(get_db)
 ):
     """Get a specific time capsule by ID"""
     capsule = get_time_capsule_by_id(db, capsule_id)
@@ -110,9 +110,15 @@ def get_time_capsule(
             detail="Time capsule not found"
         )
 
+    capsule = attach_capsule_user(db, capsule)
+    if not capsule.user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Time capsule not found"
+        )
+
     capsule_dict = TimeCapsuleDetailResponse.model_validate(capsule).model_dump()
 
-    # Decrypt content only if opened
     if capsule.is_opened:
         try:
             capsule_dict['content'] = decrypt_message(capsule.content)
@@ -127,10 +133,10 @@ def get_time_capsule(
 
 @router.put("/{capsule_id}", response_model=TimeCapsuleResponse)
 def update_time_capsule_endpoint(
-    capsule_id: int,
+    capsule_id: str,
     capsule_data: TimeCapsuleUpdate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Database = Depends(get_db)
 ):
     """Update a time capsule (only if not opened and before open date)"""
     capsule = get_time_capsule_by_id(db, capsule_id)
@@ -152,9 +158,9 @@ def update_time_capsule_endpoint(
 
 @router.post("/{capsule_id}/open", response_model=TimeCapsuleDetailResponse)
 def open_time_capsule_endpoint(
-    capsule_id: int,
+    capsule_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Database = Depends(get_db)
 ):
     """Open a time capsule (only when open date has arrived)"""
     capsule = get_time_capsule_by_id(db, capsule_id)
@@ -171,7 +177,13 @@ def open_time_capsule_endpoint(
             detail="Cannot open capsule yet or already opened"
         )
 
-    # Decrypt content
+    opened_capsule = attach_capsule_user(db, opened_capsule)
+    if not opened_capsule.user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Time capsule not found"
+        )
+
     try:
         decrypted_content = decrypt_message(opened_capsule.content)
     except ValueError as exc:
@@ -188,9 +200,9 @@ def open_time_capsule_endpoint(
 
 @router.delete("/{capsule_id}", response_model=dict)
 def delete_time_capsule_endpoint(
-    capsule_id: int,
+    capsule_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Database = Depends(get_db)
 ):
     """Delete a time capsule (only if not opened)"""
     success = delete_time_capsule(db, capsule_id, current_user.id)
@@ -204,7 +216,7 @@ def delete_time_capsule_endpoint(
 
 
 @router.post("/check-ready", response_model=dict)
-def check_ready_capsules(db: Session = Depends(get_db)):
+def check_ready_capsules(db: Database = Depends(get_db)):
     """Check and open time capsules that are ready (for scheduled tasks)"""
     current_time = datetime.utcnow()
     ready_capsules = get_pending_time_capsules(db, current_time)
@@ -213,6 +225,5 @@ def check_ready_capsules(db: Session = Depends(get_db)):
     for capsule in ready_capsules:
         open_time_capsule(db, capsule.id)
         opened_count += 1
-        # TODO: Send notification to user (email, push notification, etc.)
 
     return {"message": f"Opened {opened_count} time capsules"}

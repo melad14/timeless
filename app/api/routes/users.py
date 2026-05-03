@@ -1,7 +1,7 @@
 """User routes"""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from pymongo.database import Database
 from app.database import get_db
 
 from app.models import User
@@ -13,13 +13,13 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("/me", response_model=UserDetailResponse)
-def get_current_user(current_user: User = Depends(get_current_active_user)):
+def get_current_user_profile(current_user: User = Depends(get_current_active_user)):
     """Get current user profile"""
     return UserDetailResponse.model_validate(current_user)
 
 
 @router.get("/{user_id}", response_model=UserResponse)
-def get_user(user_id: int, db: Session = Depends(get_db)):
+def get_user(user_id: str, db: Database = Depends(get_db)):
     """Get user by ID"""
     user = get_user_by_id(db, user_id)
     if not user:
@@ -34,7 +34,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 def update_current_user(
     user_update: UserUpdate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Database = Depends(get_db)
 ):
     """Update current user profile"""
     updated_user = update_user(db, current_user.id, user_update)
@@ -49,7 +49,7 @@ def update_current_user(
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 def deactivate_current_user(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Database = Depends(get_db)
 ):
     """Deactivate current user account"""
     success = deactivate_user(db, current_user.id)

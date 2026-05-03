@@ -5,10 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.config import get_settings
 from app.api import api_router
-from app.database import Base, engine
-
-# Create database tables
-Base.metadata.create_all(bind=engine)
+from app.database import ensure_indexes
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -18,6 +15,12 @@ app = FastAPI(
 )
 
 settings = get_settings()
+
+
+@app.on_event("startup")
+def on_startup():
+    ensure_indexes()
+
 
 # Configure CORS
 app.add_middleware(

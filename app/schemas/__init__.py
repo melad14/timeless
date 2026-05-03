@@ -1,6 +1,6 @@
 """Pydantic schemas for request/response validation"""
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from datetime import datetime
 from typing import List, Optional
 
@@ -32,14 +32,13 @@ class UserUpdate(BaseModel):
 
 class UserResponse(UserBase):
     """User response schema"""
-    id: int
+    model_config = ConfigDict(from_attributes=True, extra="ignore")
+
+    id: str
     is_active: bool
     is_verified: bool
     created_at: datetime
     updated_at: datetime
-    
-    class Config:
-        from_attributes = True
 
 
 class UserDetailResponse(UserResponse):
@@ -83,16 +82,78 @@ class TimeCapsuleUpdate(BaseModel):
 
 class TimeCapsuleResponse(TimeCapsuleBase):
     """Time capsule response schema"""
-    id: int
-    user_id: int
+    model_config = ConfigDict(from_attributes=True, extra="ignore")
+
+    id: str
+    user_id: str
     is_opened: bool
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class TimeCapsuleDetailResponse(TimeCapsuleResponse):
     """Detailed time capsule response with user info"""
     user: UserResponse
+
+
+# Message Schemas
+class MessageBase(BaseModel):
+    """Base message schema"""
+    conversation_id: str
+    content: str = Field(..., min_length=1)
+    content_type: str = Field(..., pattern="^(text|image|video)$")
+
+
+class MessageCreate(MessageBase):
+    """Message creation schema"""
+    pass
+
+
+class MessageUpdate(BaseModel):
+    """Message update schema"""
+    content: Optional[str] = Field(None, min_length=1)
+    content_type: Optional[str] = Field(None, pattern="^(text|image|video)$")
+
+
+class MessageResponse(MessageBase):
+    """Message response schema"""
+    model_config = ConfigDict(from_attributes=True, extra="ignore")
+
+    id: str
+    sender_id: str
+    is_read: bool
+    is_favorite: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+# Conversation Schemas
+class ConversationBase(BaseModel):
+    """Base conversation schema"""
+    title: str = Field(..., min_length=1, max_length=255)
+    member_ids: list[str] = Field(default_factory=list)
+
+
+class ConversationCreate(ConversationBase):
+    """Conversation creation schema"""
+    pass
+
+
+class ConversationUpdate(BaseModel):
+    """Conversation update schema"""
+    title: Optional[str] = Field(None, min_length=1, max_length=255)
+
+
+class ConversationResponse(ConversationBase):
+    """Conversation response schema"""
+    model_config = ConfigDict(from_attributes=True, extra="ignore")
+
+    id: str
+    owner_id: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class ConversationDetailResponse(ConversationResponse):
+    """Detailed conversation response with member info"""
+    members: list[UserResponse] = []

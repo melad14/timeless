@@ -6,10 +6,11 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
-    
-    # Database
-    database_url: str = "sqlite:///./timeless.db"  # Default to SQLite for development
-    
+
+    # MongoDB (URI must include auth for Atlas; db name in path or use mongodb_db_name)
+    mongodb_uri: str = "mongodb://127.0.0.1:27017"
+    mongodb_db_name: str = "timeless"
+
     # Server
     debug: bool = True
     host: str = "0.0.0.0"

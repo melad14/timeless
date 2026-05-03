@@ -1,34 +1,46 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import NullPool
-from .config import get_settings
+"""MongoDB connection and database access."""
 
-settings = get_settings()
+from typing import Generator
 
-# Database URL from config
-SQLALCHEMY_DATABASE_URL = settings.database_url
+from pymongo import MongoClient
+from pymongo.database import Database
 
-_engine_kwargs = {}
-if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
-    _engine_kwargs["connect_args"] = {"check_same_thread": False}
-else:
-    # Serverless / short-lived workers: avoid pooled connections going stale
-    _engine_kwargs["poolclass"] = NullPool
-    _engine_kwargs["pool_pre_ping"] = True
+from app.config import get_settings
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, **_engine_kwargs)
+_client: MongoClient | None = None
 
-# Create SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base class for models
-Base = declarative_base()
+def get_mongo_client() -> MongoClient:
+    global _client
+    if _client is None:
+        settings = get_settings()
+        _client = MongoClient(settings.mongodb_uri)
+    return _client
 
-# Dependency to get DB session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
+def get_database() -> Database:
+    settings = get_settings()
+    return get_mongo_client()[settings.mongodb_db_name]
+
+
+def ensure_indexes() -> None:
+    db = get_database()
+    db.users.create_index("email", unique=True)
+    db.users.create_index("username", unique=True)
+    db.time_capsules.create_index([("user_id", 1), ("created_at", -1)])
+    db.messages.create_index([("conversation_id", 1), ("created_at", 1)])
+    db.messages.create_index([("sender_id", 1), ("is_favorite", 1)])
+    db.conversations.create_index([("member_ids", 1), ("updated_at", -1)])
+
+
+def get_db() -> Generator[Database, None, None]:
+    """FastAPI dependency: yields Mongo database handle."""
+    yield get_database()
+
+
+def reset_client_for_tests() -> None:
+    """Close client between tests."""
+    global _client
+    if _client is not None:
+        _client.close()
+        _client = None

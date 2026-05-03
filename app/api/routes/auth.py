@@ -1,7 +1,7 @@
 """Authentication routes"""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from pymongo.database import Database
 from app.database import get_db
 
 from app.schemas import UserCreate, UserLogin, TokenResponse, UserResponse
@@ -19,7 +19,7 @@ settings = get_settings()
 
 
 @router.post("/signup", response_model=TokenResponse)
-def signup(user_data: UserCreate, db: Session = Depends(get_db)):
+def signup(user_data: UserCreate, db: Database = Depends(get_db)):
     """Register a new user"""
     # Check if user already exists
     existing_user_email = get_user_by_email(db, user_data.email)
@@ -50,7 +50,7 @@ def signup(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(credentials: UserLogin, db: Session = Depends(get_db)):
+def login(credentials: UserLogin, db: Database = Depends(get_db)):
     """Login user and return JWT token"""
     user = authenticate_user(db, credentials.email, credentials.password)
     if not user:
