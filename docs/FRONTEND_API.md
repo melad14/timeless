@@ -1,13 +1,19 @@
 # توثيق واجهة الـ API للفرونت إند — Timeless
 
-هذا المستند يشرح كيف يربط تطبيق الويب/الموبايل (الفرونت إند) بخادم **Timeless** (FastAPI). المسار الأساسي لجميع موارد الـ REST هو **`/api/v1`**.
+هذا المستند يشرح كيف يربط تطبيق الويب/الموبايل (الفرونت إند) بخادم **Timeless** (FastAPI).
+
+- عنوان القاعدة الإنتاجي: `https://timeless-lemon.vercel.app/api/v1`
+- عنوان القاعدة المحلي: `http://localhost:8000/api/v1`
+
+جميع طلبات الـ API في المشروع تستخدم البادئة **`/api/v1`**.
 
 ## 1. تشغيل الخادم محلياً
 
 - الافتراضي من الإعدادات: `host=0.0.0.0`, `port=8000`.
-- عنوان القاعدة النموذجي: `http://localhost:8000`
+- عنوان القاعدة المحلي للـ API: `http://localhost:8000/api/v1`
+- عنوان القاعدة الإنتاجي للـ API: `https://timeless-lemon.vercel.app/api/v1`
 - وثائق تفاعلية (Swagger): `http://localhost:8000/docs`
-- فحص الصحة: `GET /health`
+- فحص الصحة: `GET /health` (يعمل على الجذر `https://timeless-lemon.vercel.app/health` في الإنتاج)
 
 ## 2. CORS
 
@@ -83,8 +89,23 @@ Authorization: Bearer <access_token>
 | POST | `/api/v1/time-capsules/{id}/open` | نعم | فتح عند حلول الموعد |
 | DELETE | `/api/v1/time-capsules/{id}` | نعم | حذف (فقط إن لم تُفتح) |
 | POST | `/api/v1/time-capsules/check-ready` | لا | مهمة مجدولة داخلية؛ تفتح الكبسولات التي حان وقتها |
+| POST | `/api/v1/conversations` | نعم | إنشاء محادثة جديدة مع أعضاء محددين |
+| GET | `/api/v1/conversations` | نعم | جلب محادثات المستخدم الحالية |
+| GET | `/api/v1/conversations/{id}` | نعم | جلب تفاصيل المحادثة مع الأعضاء |
+| PUT | `/api/v1/conversations/{id}` | نعم | تحديث اسم المحادثة |
+| POST | `/api/v1/conversations/{id}/members/{user_id}` | نعم | إضافة عضو إلى المحادثة |
+| DELETE | `/api/v1/conversations/{id}/members/{user_id}` | نعم | إزالة عضو من المحادثة |
+| DELETE | `/api/v1/conversations/{id}` | نعم | حذف المحادثة |
+| POST | `/api/v1/messages` | نعم | إرسال رسالة في محادثة |
+| GET | `/api/v1/messages/{id}` | نعم | جلب رسالة محددة |
+| PUT | `/api/v1/messages/{id}` | نعم | تعديل رسالة المرسل |
+| POST | `/api/v1/messages/{id}/read` | نعم | وضع علامة قراءة على رسالة |
+| POST | `/api/v1/messages/{id}/favorite` | نعم | تبديل حال المفضلة للرسالة |
+| DELETE | `/api/v1/messages/{id}` | نعم | حذف رسالة |
+| GET | `/api/v1/messages/conversation/{conversation_id}` | نعم | جلب رسائل محادثة |
+| GET | `/api/v1/messages/user/favorites` | نعم | جلب رسائل المستخدم المفضلة |
 
-**ملاحظة:** ملفات المسارات `conversations` و `messages` موجودة في المشروع لكنها **غير مربوطة** حالياً بـ `api_router`، لذلك لا تظهر في الخادم الفعلي حتى يُضاف تسجيلها في `app/api/__init__.py`.
+**ملاحظة:** ملفات مسارات `conversations` و `messages` مسجلة في `app/api/__init__.py` وتعمل الآن ضمن واجهة الـ API.
 
 ## 9. أجسام JSON (أمثلة)
 
@@ -164,10 +185,10 @@ Authorization: Bearer <access_token>
 ## 10. تكامل سريع من الفرونت (fetch)
 
 ```javascript
-const BASE = 'http://localhost:8000';
+const BASE = 'https://timeless-lemon.vercel.app/api/v1';
 
 async function login(email, password) {
-  const res = await fetch(`${BASE}/api/v1/auth/login`, {
+  const res = await fetch(`${BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -177,7 +198,7 @@ async function login(email, password) {
 }
 
 async function getMyCapsules(token) {
-  const res = await fetch(`${BASE}/api/v1/time-capsules?skip=0&limit=50`, {
+  const res = await fetch(`${BASE}/time-capsules?skip=0&limit=50`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error(await res.text());
@@ -193,7 +214,19 @@ async function getMyCapsules(token) {
 
 - `postman/Timeless-API.postman_collection.json`
 
-بعد الاستيراد، عيّن المتغير `baseUrl` إن لزم، ونفّذ **Login** ثم انسخ `access_token` إلى المتغير `accessToken` (أو استخدم سكربت الاختبار المرفق في طلبات Login إن وُجد).
+بعد الاستيراد، عيّن المتغير `baseUrl` إلى:
+
+```text
+https://timeless-lemon.vercel.app/api/v1
+```
+
+وفي حال أردت اختبار `GET /` أو `GET /health` مباشرة من Postman، استخدم:
+
+```text
+https://timeless-lemon.vercel.app
+```
+
+ثم نفّذ **Login** ونسخ `access_token` إلى المتغير `accessToken` (أو استخدم سكربت الاختبار المرفق في طلبات Login إن وُجد`).
 
 ---
 

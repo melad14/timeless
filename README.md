@@ -103,6 +103,16 @@ timeless/
      python -c "import secrets; print(secrets.token_hex(16))"
      ```
 
+## Seed Data
+
+To populate the MongoDB database with sample users, conversations, messages, and time capsules, run:
+
+```bash
+python seeds.py --reset
+```
+
+Use `--reset` to drop the existing seed collections before inserting the sample data.
+
 ## Running the Application
 
 **Development:**
