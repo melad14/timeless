@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     encryption_key: str = "your-32-byte-encryption-key-123456"
 
     # CORS (env: JSON array or comma-separated, e.g. https://myapp.vercel.app)
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8000", "https://timeless-lemon.vercel.app"]
 
     @field_validator("cors_origins", mode="before")
     @classmethod
