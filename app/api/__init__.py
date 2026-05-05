@@ -1,7 +1,7 @@
 """API routes module"""
 
 from fastapi import APIRouter
-from app.api.routes import auth, users, time_capsules, messages, conversations
+from app.api.routes import auth, users, time_capsules, messages, conversations, whatsapp
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -11,5 +11,6 @@ api_router.include_router(users.router)
 api_router.include_router(time_capsules.router)
 api_router.include_router(messages.router)
 api_router.include_router(conversations.router)
+api_router.include_router(whatsapp.router)
 
 __all__ = ["api_router"]

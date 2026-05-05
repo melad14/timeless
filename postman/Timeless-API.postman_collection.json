@@ -416,6 +416,26 @@
           }
         }
       ]
+    },
+    {
+      "name": "WhatsApp",
+      "item": [
+        {
+          "name": "POST send WhatsApp",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+966500000000\",\n  \"message\": \"Hello from Timeless!\"\n}"
+            },
+            "url": "{{baseUrl}}/whatsapp/send"
+          }
+        }
+      ]
     }
   ]
 }
