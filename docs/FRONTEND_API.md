@@ -104,7 +104,6 @@ Authorization: Bearer <access_token>
 | DELETE | `/api/v1/messages/{id}` | نعم | حذف رسالة |
 | GET | `/api/v1/messages/conversation/{conversation_id}` | نعم | جلب رسائل محادثة |
 | GET | `/api/v1/messages/user/favorites` | نعم | جلب رسائل المستخدم المفضلة |
-| POST | `/api/v1/whatsapp/send` | نعم | إرسال رسالة WhatsApp (غير رسمي، محلي فقط) |
 
 **ملاحظة:** ملفات مسارات `conversations` و `messages` مسجلة في `app/api/__init__.py` وتعمل الآن ضمن واجهة الـ API.
 
