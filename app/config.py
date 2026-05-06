@@ -23,7 +23,13 @@ class Settings(BaseSettings):
     encryption_key: str = "your-32-byte-encryption-key-123456"
 
     # CORS (env: JSON array or comma-separated, e.g. https://myapp.vercel.app)
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    cors_origins: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://localhost:5173",
+        "https://timless-front.vercel.app",
+        "https://timeless-lemon.vercel.app"
+    ]
 
     # SMTP Settings
     smtp_host: str = "smtp.gmail.com"
