@@ -61,6 +61,12 @@ def root():
     }
 
 
+@app.get("/api/v1/ping")
+def ping():
+    """Ping endpoint for CORS testing"""
+    return {"status": "ok", "message": "CORS is working"}
+
+
 @app.get("/health")
 def health_check():
     """Health check endpoint"""
