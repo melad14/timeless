@@ -23,32 +23,13 @@ def on_startup():
 
 
 # Configure CORS
-origins = settings.cors_origins
-if "*" not in origins:
-    origins.append("https://timless-front.vercel.app")
-    origins.append("https://timeless-lemon.vercel.app")
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.debug else origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Manual OPTIONS handler for Vercel preflight requests
-@app.options("/{rest_of_path:path}")
-async def preflight_handler(request: Request, rest_of_path: str):
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"message": "ok"},
-        headers={
-            "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
-            "Access-Control-Allow-Methods": "*",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Allow-Credentials": "true",
-        },
-    )
 
 # Include API router
 app.include_router(api_router)
