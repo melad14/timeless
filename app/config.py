@@ -23,10 +23,10 @@ class Settings(BaseSettings):
     encryption_key: str = "your-32-byte-encryption-key-123456"
 
     # CORS (env: JSON array or comma-separated, e.g. https://myapp.vercel.app)
-    cors_origins: List[str] = [
+    cors_origins: Union[str, List[str]] = [
         "http://localhost:3000",
         "http://localhost:8000",
-        "https://timless-front.vercel.app",   
+        "https://timless-front.vercel.app",
     ]
 
     # SMTP Settings
@@ -43,13 +43,23 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, v: Union[str, List[str], None]):
         if v is None:
-            return ["http://localhost:3000", "http://localhost:8000", "https://timless-front.vercel.app", "https://timeless-lemon.vercel.app"]
+            return ["http://localhost:3000", "http://localhost:8000", "https://timless-front.vercel.app"]
         if isinstance(v, list):
             return v
+        
         s = str(v).strip()
+        if not s:
+            return ["http://localhost:3000", "http://localhost:8000", "https://timless-front.vercel.app"]
+            
         if s.startswith("["):
-            import json
-            return json.loads(s)
+            try:
+                import json
+                return json.loads(s)
+            except Exception:
+                # Fallback if JSON is malformed
+                pass
+        
+        # Split by comma for non-JSON or malformed JSON strings
         return [x.strip() for x in s.split(",") if x.strip()]
     
     class Config:
