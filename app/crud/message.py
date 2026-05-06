@@ -31,6 +31,7 @@ def create_message(db: Database, message_data: MessageCreate, sender_id: str) ->
         "content_type": message_data.content_type,
         "is_read": False,
         "is_favorite": False,
+        "metadata": message_data.metadata,
         "created_at": now,
         "updated_at": now,
     }
@@ -116,6 +117,16 @@ def get_favorite_messages(db: Database, user_id: str, skip: int = 0, limit: int 
     cursor = (
         db.messages.find({"sender_id": user_id, "is_favorite": True})
         .sort("updated_at", -1)
+        .skip(skip)
+        .limit(limit)
+    )
+    return [message_from_doc(doc) for doc in cursor if doc]
+
+
+def get_sent_messages(db: Database, user_id: str, skip: int = 0, limit: int = 50) -> List[Message]:
+    cursor = (
+        db.messages.find({"sender_id": user_id})
+        .sort("created_at", -1)
         .skip(skip)
         .limit(limit)
     )

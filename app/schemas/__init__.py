@@ -37,6 +37,7 @@ class UserResponse(UserBase):
     id: str
     is_active: bool
     is_verified: bool
+    is_admin: bool
     created_at: datetime
     updated_at: datetime
 
@@ -66,6 +67,7 @@ class TimeCapsuleBase(BaseModel):
     content: str = Field(..., min_length=1)  # Encrypted content
     content_type: str = Field(..., pattern="^(text|image|video)$")
     open_date: datetime = Field(..., description="Date and time when the capsule should be opened")
+    recipients: List[EmailStr] = Field(default_factory=list, description="List of recipient emails")
 
 
 class TimeCapsuleCreate(TimeCapsuleBase):
@@ -102,6 +104,7 @@ class MessageBase(BaseModel):
     conversation_id: str
     content: str = Field(..., min_length=1)
     content_type: str = Field(..., pattern="^(text|image|video)$")
+    metadata: dict = Field(default_factory=dict)
 
 
 class MessageCreate(MessageBase):

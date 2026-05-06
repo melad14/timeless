@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Optional
 
@@ -18,6 +18,7 @@ class User:
     hashed_password: str
     is_active: bool
     is_verified: bool
+    is_admin: bool
     created_at: datetime
     updated_at: datetime
 
@@ -33,6 +34,7 @@ class TimeCapsule:
     is_opened: bool
     created_at: datetime
     updated_at: datetime
+    recipients: list[str] = field(default_factory=list)
     user: Optional[User] = None
 
 
@@ -47,6 +49,7 @@ class Message:
     is_favorite: bool
     created_at: datetime
     updated_at: datetime
+    metadata: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -71,6 +74,7 @@ def user_from_doc(doc: Optional[dict[str, Any]]) -> Optional[User]:
         hashed_password=doc["hashed_password"],
         is_active=bool(doc.get("is_active", True)),
         is_verified=bool(doc.get("is_verified", False)),
+        is_admin=bool(doc.get("is_admin", False)),
         created_at=doc["created_at"],
         updated_at=doc["updated_at"],
     )
@@ -96,6 +100,7 @@ def time_capsule_from_doc(
         is_opened=bool(doc.get("is_opened", False)),
         created_at=doc["created_at"],
         updated_at=doc["updated_at"],
+        recipients=doc.get("recipients", []),
         user=user,
     )
 
@@ -113,6 +118,7 @@ def message_from_doc(doc: Optional[dict[str, Any]]) -> Optional[Message]:
         is_favorite=bool(doc.get("is_favorite", False)),
         created_at=doc["created_at"],
         updated_at=doc["updated_at"],
+        metadata=doc.get("metadata", {}),
     )
 
 

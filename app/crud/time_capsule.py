@@ -11,6 +11,7 @@ from app.models import TimeCapsule, User, time_capsule_from_doc, user_from_doc
 from app.mongo_helpers import parse_object_id, utc_naive
 from app.schemas import TimeCapsuleCreate, TimeCapsuleUpdate
 from app.security import encrypt_message
+from app.utils.email import send_capsule_opened_email
 
 
 def attach_capsule_user(db: Database, capsule: TimeCapsule) -> TimeCapsule:
@@ -39,6 +40,7 @@ def create_time_capsule(
         "content": encrypted_content,
         "content_type": capsule_data.content_type,
         "open_date": utc_naive(capsule_data.open_date),
+        "recipients": capsule_data.recipients,
         "is_opened": False,
         "created_at": now,
         "updated_at": now,
@@ -111,6 +113,10 @@ def open_time_capsule(db: Database, capsule_id: str) -> Optional[TimeCapsule]:
         {"$set": {"is_opened": True, "updated_at": datetime.utcnow()}},
         return_document=ReturnDocument.AFTER,
     )
+    
+    if res and res.get("recipients"):
+        send_capsule_opened_email(res["recipients"], res["title"], str(res["_id"]))
+        
     return time_capsule_from_doc(res)
 
 

@@ -25,6 +25,16 @@ class Settings(BaseSettings):
     # CORS (env: JSON array or comma-separated, e.g. https://myapp.vercel.app)
     cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8000"]
 
+    # SMTP Settings
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = "noreply@timeless.app"
+
+    # Frontend URL
+    frontend_url: str = "http://localhost:3000"
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: Union[str, List[str], None]):

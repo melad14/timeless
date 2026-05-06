@@ -19,6 +19,7 @@ from app.crud.message import (
     toggle_message_favorite,
     delete_message,
     get_favorite_messages,
+    get_sent_messages,
 )
 from app.crud.conversation import get_conversation_by_id
 from app.database import get_db
@@ -221,4 +222,16 @@ def get_user_favorites(
 ):
     """Get user's favorite messages."""
     messages = get_favorite_messages(db, current_user.id, skip, limit)
+    return [decrypt_message_response(message) for message in messages]
+
+
+@router.get("/user/sent", response_model=list[MessageResponse])
+def get_user_sent_messages(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    db: Database = Depends(get_db),
+):
+    """Get messages sent by the current user."""
+    messages = get_sent_messages(db, current_user.id, skip, limit)
     return [decrypt_message_response(message) for message in messages]
