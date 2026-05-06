@@ -26,9 +26,8 @@ class Settings(BaseSettings):
     cors_origins: List[str] = [
         "http://localhost:3000",
         "http://localhost:8000",
-        "http://localhost:5173",
         "https://timless-front.vercel.app",
-        "https://timeless-lemon.vercel.app"
+        "https://timeless-lemon.vercel.app",
     ]
 
     # SMTP Settings
@@ -45,7 +44,7 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, v: Union[str, List[str], None]):
         if v is None:
-            return ["http://localhost:3000", "http://localhost:8000"]
+            return ["http://localhost:3000", "http://localhost:8000", "https://timless-front.vercel.app", "https://timeless-lemon.vercel.app"]
         if isinstance(v, list):
             return v
         s = str(v).strip()
