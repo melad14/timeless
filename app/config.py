@@ -26,8 +26,7 @@ class Settings(BaseSettings):
     cors_origins: List[str] = [
         "http://localhost:3000",
         "http://localhost:8000",
-        "https://timless-front.vercel.app",
-        "https://timeless-lemon.vercel.app",
+        "https://timless-front.vercel.app",   
     ]
 
     # SMTP Settings
@@ -38,7 +37,7 @@ class Settings(BaseSettings):
     smtp_from_email: str = "noreply@timeless.app"
 
     # Frontend URL
-    frontend_url: str = "http://localhost:3000"
+    frontend_url: str = "https://timless-front.vercel.app"
 
     @field_validator("cors_origins", mode="before")
     @classmethod
