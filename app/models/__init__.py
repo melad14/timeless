@@ -33,7 +33,7 @@ class TimeCapsule:
     open_date: datetime
     is_opened: bool
     created_at: datetime
-    updated_at: datetime
+    is_notified: bool = False
     recipients: list[str] = field(default_factory=list)
     user: Optional[User] = None
 
@@ -100,6 +100,7 @@ def time_capsule_from_doc(
         is_opened=bool(doc.get("is_opened", False)),
         created_at=doc["created_at"],
         updated_at=doc["updated_at"],
+        is_notified=bool(doc.get("is_notified", False)),
         recipients=doc.get("recipients", []),
         user=user,
     )

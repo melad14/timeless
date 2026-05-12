@@ -89,6 +89,7 @@ class TimeCapsuleResponse(TimeCapsuleBase):
     id: str
     user_id: str
     is_opened: bool
+    is_notified: bool
     created_at: datetime
     updated_at: datetime
 
