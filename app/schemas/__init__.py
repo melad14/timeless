@@ -110,7 +110,7 @@ class MessageBase(BaseModel):
 
 class MessageCreate(MessageBase):
     """Message creation schema"""
-    pass
+    scheduled_at: Optional[datetime] = None
 
 
 class MessageUpdate(BaseModel):
@@ -127,6 +127,7 @@ class MessageResponse(MessageBase):
     sender_id: str
     is_read: bool
     is_favorite: bool
+    scheduled_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 

@@ -48,8 +48,9 @@ class Message:
     content_type: str
     is_read: bool
     is_favorite: bool
-    created_at: datetime
-    updated_at: datetime
+    scheduled_at: Optional[datetime] = None
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
     metadata: dict = field(default_factory=dict)
 
 
@@ -121,6 +122,7 @@ def message_from_doc(doc: Optional[dict[str, Any]]) -> Optional[Message]:
         created_at=doc["created_at"],
         updated_at=doc["updated_at"],
         metadata=doc.get("metadata", {}),
+        scheduled_at=doc.get("scheduled_at"),
     )
 
 

@@ -32,6 +32,7 @@ def create_message(db: Database, message_data: MessageCreate, sender_id: str) ->
         "is_read": False,
         "is_favorite": False,
         "metadata": message_data.metadata,
+        "scheduled_at": message_data.scheduled_at,
         "created_at": now,
         "updated_at": now,
     }
