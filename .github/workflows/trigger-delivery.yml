@@ -1,0 +1,16 @@
+name: Trigger Message Delivery
+
+on:
+  schedule:
+    # Runs every 5 minutes
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Time Capsule Check
+        run: |
+          curl -X POST "https://timeless-lemon.vercel.app/api/v1/time-capsules/check-ready" \
+               -H "Content-Type: application/json"
