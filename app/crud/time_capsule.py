@@ -65,9 +65,14 @@ def get_user_time_capsules(
 def get_pending_time_capsules(
     db: Database, current_time: datetime
 ) -> List[TimeCapsule]:
-    cursor = db.time_capsules.find(
-        {"open_date": {"$lte": current_time}, "is_opened": False}
-    )
+    # Find capsules that are ready to be opened AND (not opened OR not notified)
+    cursor = db.time_capsules.find({
+        "open_date": {"$lte": current_time},
+        "$or": [
+            {"is_opened": False},
+            {"is_notified": False}
+        ]
+    })
     return [time_capsule_from_doc(d) for d in cursor if d]
 
 
@@ -102,22 +107,40 @@ def open_time_capsule(db: Database, capsule_id: str) -> Optional[TimeCapsule]:
     oid = parse_object_id(capsule_id)
     if oid is None:
         return None
+    
     doc = db.time_capsules.find_one({"_id": oid})
-    if not doc or doc.get("is_opened"):
+    if not doc:
         return None
-    if utc_naive(doc["open_date"]) > datetime.utcnow():
+        
+    # If already opened and notified, nothing to do
+    if doc.get("is_opened") and doc.get("is_notified"):
+        return time_capsule_from_doc(doc)
+
+    # 1. Mark as opened if not already
+    if not doc.get("is_opened"):
+        if utc_naive(doc["open_date"]) > datetime.utcnow():
+            return None
+            
+        doc = db.time_capsules.find_one_and_update(
+            {"_id": oid, "is_opened": False},
+            {"$set": {"is_opened": True, "updated_at": datetime.utcnow()}},
+            return_document=ReturnDocument.AFTER,
+        )
+    
+    if not doc:
         return None
 
-    res = db.time_capsules.find_one_and_update(
-        {"_id": oid, "is_opened": False},
-        {"$set": {"is_opened": True, "updated_at": datetime.utcnow()}},
-        return_document=ReturnDocument.AFTER,
-    )
-    
-    if res and res.get("recipients"):
-        send_capsule_opened_email(res["recipients"], res["title"], str(res["_id"]))
-        
-    return time_capsule_from_doc(res)
+    # 2. Try to send notification if not already notified
+    if not doc.get("is_notified") and doc.get("recipients"):
+        success = send_capsule_opened_email(doc["recipients"], doc["title"], str(doc["_id"]))
+        if success:
+            doc = db.time_capsules.find_one_and_update(
+                {"_id": oid},
+                {"$set": {"is_notified": True, "updated_at": datetime.utcnow()}},
+                return_document=ReturnDocument.AFTER,
+            )
+            
+    return time_capsule_from_doc(doc)
 
 
 def delete_time_capsule(
