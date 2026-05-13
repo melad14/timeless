@@ -10,7 +10,13 @@ jobs:
   trigger:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Time Capsule Check
+      - name: Persistent Delivery Guard (50-minute loop)
         run: |
-          curl -X POST "https://timeless-lemon.vercel.app/api/v1/time-capsules/check-ready" \
-               -H "Content-Type: application/json"
+          for i in {1..50}
+          do
+            echo "Iteration $i: Triggering delivery check..."
+            curl -s -X POST "https://timeless-lemon.vercel.app/api/v1/time-capsules/check-ready" \
+                 -H "Content-Type: application/json"
+            echo "Sleeping for 60 seconds..."
+            sleep 60
+          done
