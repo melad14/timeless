@@ -33,6 +33,7 @@ class TimeCapsule:
     open_date: datetime
     is_opened: bool
     created_at: datetime
+    updated_at: datetime
     is_notified: bool = False
     recipients: list[str] = field(default_factory=list)
     user: Optional[User] = None
