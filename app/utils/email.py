@@ -92,7 +92,7 @@ def send_capsule_opened_email(recipients: list[str], capsule_title: str, capsule
 
     try:
         email = resend.Emails.send({
-            "from": "Timeless <onboarding@resend.dev>",
+            "from": "Timeless <noreply@outlookds.com>",
             "to": recipients,
             "subject": subject,
             "html": body,
