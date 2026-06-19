@@ -29,12 +29,15 @@ class Settings(BaseSettings):
         "https://timless-front.vercel.app",
     ]
 
-    # SMTP Settings
+    # SMTP Settings (legacy - kept for reference)
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: str = ""
     smtp_from_email: str = "noreply@timeless.app"
+
+    # Resend API (primary email provider)
+    resend_api_key: str = ""
 
     # Frontend URL
     frontend_url: str = "https://timless-front.vercel.app"
