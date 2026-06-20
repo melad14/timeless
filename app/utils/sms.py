@@ -48,7 +48,7 @@ def send_capsule_opened_sms(recipients_phones: list[str], capsule_title: str, ca
             response = requests.post(url, json=payload, headers=headers)
             res_data = response.json()
             
-            if response.status_code == 200 and res_data.get("ok") is True:
+            if response.status_code in [200, 201] and (res_data.get("status") == "success" or res_data.get("ok") is True):
                 logger.info(f"SMS successfully sent to {phone}. Message ID: {res_data.get('data', {}).get('id')}")
             else:
                 logger.error(f"Failed to send SMS to {phone}. Response: {res_data}")
