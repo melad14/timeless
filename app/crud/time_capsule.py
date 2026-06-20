@@ -72,7 +72,7 @@ def get_pending_time_capsules(
         "open_date": {"$lte": current_time},
         "$or": [
             {"is_opened": False},
-            {"is_notified": False}
+            {"is_notified": {"$ne": True}}
         ]
     })
     return [time_capsule_from_doc(d) for d in cursor if d]
