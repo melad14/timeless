@@ -12,6 +12,7 @@ from app.mongo_helpers import parse_object_id, utc_naive
 from app.schemas import TimeCapsuleCreate, TimeCapsuleUpdate
 from app.security import encrypt_message
 from app.utils.email import send_capsule_opened_email
+from app.utils.sms import send_capsule_opened_sms
 
 
 def attach_capsule_user(db: Database, capsule: TimeCapsule) -> TimeCapsule:
@@ -41,6 +42,7 @@ def create_time_capsule(
         "content_type": capsule_data.content_type,
         "open_date": utc_naive(capsule_data.open_date),
         "recipients": capsule_data.recipients,
+        "recipients_phones": capsule_data.recipients_phones,
         "is_opened": False,
         "created_at": now,
         "updated_at": now,
@@ -131,9 +133,17 @@ def open_time_capsule(db: Database, capsule_id: str) -> Optional[TimeCapsule]:
         return None
 
     # 2. Try to send notification if not already notified
-    if not doc.get("is_notified") and doc.get("recipients"):
-        success = send_capsule_opened_email(doc["recipients"], doc["title"], str(doc["_id"]))
-        if success:
+    if not doc.get("is_notified") and (doc.get("recipients") or doc.get("recipients_phones")):
+        success_email = True
+        success_sms = True
+        
+        if doc.get("recipients"):
+            success_email = send_capsule_opened_email(doc["recipients"], doc["title"], str(doc["_id"]))
+            
+        if doc.get("recipients_phones"):
+            success_sms = send_capsule_opened_sms(doc["recipients_phones"], doc["title"], str(doc["_id"]))
+            
+        if success_email and success_sms:
             doc = db.time_capsules.find_one_and_update(
                 {"_id": oid},
                 {"$set": {"is_notified": True, "updated_at": datetime.utcnow()}},

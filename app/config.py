@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     # Resend API (primary email provider)
     resend_api_key: str = ""
 
+    # httpSMS Settings
+    httpsms_api_key: str = ""
+    httpsms_from_phone: str = ""
+
     # Frontend URL
     frontend_url: str = "https://timless-front.vercel.app"
 

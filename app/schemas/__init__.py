@@ -1,6 +1,6 @@
 """Pydantic schemas for request/response validation"""
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 from datetime import datetime
 from typing import List, Optional
 
@@ -68,6 +68,13 @@ class TimeCapsuleBase(BaseModel):
     content_type: str = Field(..., pattern="^(text|image|video)$")
     open_date: datetime = Field(..., description="Date and time when the capsule should be opened")
     recipients: List[EmailStr] = Field(default_factory=list, description="List of recipient emails")
+    recipients_phones: List[str] = Field(default_factory=list, description="List of recipient phone numbers")
+
+    @model_validator(mode="after")
+    def check_at_least_one_recipient(self) -> "TimeCapsuleBase":
+        if not self.recipients and not self.recipients_phones:
+            raise ValueError("At least one recipient email or phone number must be provided.")
+        return self
 
 
 class TimeCapsuleCreate(TimeCapsuleBase):
