@@ -15,8 +15,8 @@ def send_capsule_opened_sms(recipients_phones: list[str], capsule_title: str, ca
 
     url = "https://api.httpsms.com/v1/messages/send"
     
-    # We construct a clean message that fits within standard SMS limits (preferably < 160 chars for 1 segment)
-    message_content = f"Time Capsule opened: '{capsule_title}'. View it here: {settings.frontend_url}/view-capsule/{capsule_id}"
+    # We construct a clean message that fits within standard SMS limits and doesn't contain links (to bypass carrier blocks)
+    message_content = f"Your Time Capsule '{capsule_title}' is ready to be opened! Please log in to your Timeless account to view it."
     
     headers = {
         "x-api-key": settings.httpsms_api_key,
