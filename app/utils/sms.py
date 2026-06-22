@@ -15,15 +15,8 @@ def send_capsule_opened_sms(recipients_phones: list[str], capsule_title: str, ca
 
     url = "https://api.httpsms.com/v1/messages/send"
     
-    # Strip protocol and replace dots with [dot] to prevent carrier spam filters from blocking the SMS
-    clean_url = settings.frontend_url.replace("https://", "").replace("http://", "")
-    obfuscated_url = clean_url.replace(".", "[dot]")
-    
-    message_content = (
-        f"Your Time Capsule '{capsule_title}' is ready! "
-        f"Copy & open this link (replace [dot] with .):\n\n"
-        f"{obfuscated_url}/view-capsule/{capsule_id}"
-    )
+    # We construct a completely link-free message to ensure 100% carrier delivery
+    message_content = f"Your Time Capsule '{capsule_title}' is ready! Log in to your Timeless account to view it."
     
     headers = {
         "x-api-key": settings.httpsms_api_key,
