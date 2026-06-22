@@ -96,6 +96,20 @@ def get_my_opened_capsules(
     return result
 
 
+@router.api_route("/check-ready", methods=["GET", "POST"], response_model=dict)
+def check_ready_capsules(db: Database = Depends(get_db)):
+    """Check and open time capsules that are ready (for scheduled tasks)"""
+    current_time = datetime.utcnow()
+    ready_capsules = get_pending_time_capsules(db, current_time)
+
+    opened_count = 0
+    for capsule in ready_capsules:
+        open_time_capsule(db, capsule.id)
+        opened_count += 1
+
+    return {"message": f"Opened {opened_count} time capsules"}
+
+
 @router.get("/{capsule_id}", response_model=TimeCapsuleDetailResponse)
 def get_time_capsule(
     capsule_id: str,
@@ -215,15 +229,4 @@ def delete_time_capsule_endpoint(
     return {"message": "Time capsule deleted successfully"}
 
 
-@router.post("/check-ready", response_model=dict)
-def check_ready_capsules(db: Database = Depends(get_db)):
-    """Check and open time capsules that are ready (for scheduled tasks)"""
-    current_time = datetime.utcnow()
-    ready_capsules = get_pending_time_capsules(db, current_time)
-
-    opened_count = 0
-    for capsule in ready_capsules:
-        open_time_capsule(db, capsule.id)
-        opened_count += 1
-
-    return {"message": f"Opened {opened_count} time capsules"}
+# check-ready route was moved above /{capsule_id} to prevent path parameter shadowing
