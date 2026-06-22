@@ -32,15 +32,22 @@ def send_capsule_opened_sms(recipients_phones: list[str], capsule_title: str, ca
 
     success = True
     for phone in recipients_phones:
-        # Standardize phone format if needed (must start with +)
-        phone = phone.strip()
-        if not phone.startswith("+"):
-            # Simple fallback for local numbers if they missed the +
+        # Standardize phone format and handle common typos (like +012... instead of +2012...)
+        phone = "".join(c for c in phone if c.isdigit() or c == "+").strip()
+        
+        if phone.startswith("+"):
+            if phone.startswith("+0"):
+                # Typo: e.g. +0120... -> +20120...
+                phone = "+20" + phone[2:]
+        else:
             if phone.startswith("0"):
                 # E.g. Egyptian numbers 012... -> +2012...
-                phone = "+2" + phone[1:]
+                phone = "+20" + phone[1:]
             elif phone.startswith("20"):
                 phone = "+" + phone
+            elif phone.startswith("1") and len(phone) == 10:
+                # E.g. 1204... -> +201204...
+                phone = "+20" + phone
             else:
                 phone = "+" + phone
         
