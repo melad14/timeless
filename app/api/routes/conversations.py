@@ -65,7 +65,7 @@ def get_conversation(
 ):
     """Get conversation details."""
     conversation = get_conversation_by_id(db, conversation_id)
-    if not conversation or current_user.id not in conversation.member_ids:
+    if not conversation or (current_user.id not in conversation.member_ids and not current_user.is_admin):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conversation not found"
@@ -90,7 +90,7 @@ def update_conversation_info(
 ):
     """Update conversation information."""
     conversation = get_conversation_by_id(db, conversation_id)
-    if not conversation or current_user.id not in conversation.member_ids:
+    if not conversation or (current_user.id not in conversation.member_ids and not current_user.is_admin):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conversation not found"
@@ -115,7 +115,7 @@ def add_member(
 ):
     """Add member to conversation."""
     conversation = get_conversation_by_id(db, conversation_id)
-    if not conversation or current_user.id not in conversation.member_ids:
+    if not conversation or (current_user.id not in conversation.member_ids and not current_user.is_admin):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conversation not found"
@@ -146,7 +146,7 @@ def remove_member(
 ):
     """Remove member from conversation."""
     conversation = get_conversation_by_id(db, conversation_id)
-    if not conversation or current_user.id not in conversation.member_ids:
+    if not conversation or (current_user.id not in conversation.member_ids and not current_user.is_admin):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conversation not found"
@@ -170,7 +170,7 @@ def delete_conversation_endpoint(
 ):
     """Delete a conversation."""
     conversation = get_conversation_by_id(db, conversation_id)
-    if not conversation or current_user.id not in conversation.member_ids:
+    if not conversation or (current_user.id not in conversation.member_ids and not current_user.is_admin):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conversation not found"

@@ -48,7 +48,7 @@ def send_message(
 ):
     """Send a new message."""
     conversation = get_conversation_by_id(db, message_data.conversation_id)
-    if not conversation or current_user.id not in conversation.member_ids:
+    if not conversation or (current_user.id not in conversation.member_ids and not current_user.is_admin):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conversation not found"
@@ -73,7 +73,7 @@ def get_message(
         )
 
     conversation = get_conversation_by_id(db, message.conversation_id)
-    if not conversation or current_user.id not in conversation.member_ids:
+    if not conversation or (current_user.id not in conversation.member_ids and not current_user.is_admin):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Message not found"
@@ -122,7 +122,7 @@ def mark_as_read(
         )
 
     conversation = get_conversation_by_id(db, message.conversation_id)
-    if not conversation or current_user.id not in conversation.member_ids:
+    if not conversation or (current_user.id not in conversation.member_ids and not current_user.is_admin):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Message not found"
@@ -153,7 +153,7 @@ def toggle_favorite(
         )
 
     conversation = get_conversation_by_id(db, message.conversation_id)
-    if not conversation or current_user.id not in conversation.member_ids:
+    if not conversation or (current_user.id not in conversation.member_ids and not current_user.is_admin):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Message not found"
@@ -203,7 +203,7 @@ def get_conversation_msgs(
 ):
     """Get messages from a conversation."""
     conversation = get_conversation_by_id(db, conversation_id)
-    if not conversation or current_user.id not in conversation.member_ids:
+    if not conversation or (current_user.id not in conversation.member_ids and not current_user.is_admin):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conversation not found"
